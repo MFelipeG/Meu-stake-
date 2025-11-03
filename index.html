@@ -6,13 +6,19 @@
   <title>Meu Portfólio de Stake</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      background-color: #0f172a;
-      color: white;
-    }
+    body { background-color: #0f172a; color: white; }
     input, select {
-      color: black;
+      background-color: #1e293b;
+      color: white;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      width: 100%;
     }
+    input::placeholder { color: #94a3b8; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 8px; }
+    th { background-color: #1e293b; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-6">
@@ -22,50 +28,67 @@
   <div class="bg-slate-800 p-6 rounded-2xl shadow-lg w-full max-w-lg">
     <form id="stakeForm" class="space-y-4">
       <div>
-        <label class="block">Plataforma:</label>
-        <input type="text" id="platform" class="w-full p-2 rounded" placeholder="Ex: Lido, Aave, Uniswap">
+        <label class="block mb-1">Plataforma:</label>
+        <select id="platform">
+          <option>Lido</option>
+          <option>Aave</option>
+          <option>Uniswap</option>
+          <option>Binance</option>
+          <option>Outra</option>
+        </select>
       </div>
 
       <div>
-        <label class="block">Token em Stake:</label>
-        <input type="text" id="stakedToken" class="w-full p-2 rounded" placeholder="Ex: ETH, USDT, MATIC">
+        <label class="block mb-1">Token em Stake:</label>
+        <input type="text" id="stakedToken" placeholder="Ex: ETH, USDT, MATIC">
       </div>
 
       <div>
-        <label class="block">Token Colateral (LSD):</label>
-        <input type="text" id="collateralToken" class="w-full p-2 rounded" placeholder="Ex: stETH, aETH, etc.">
+        <label class="block mb-1">Token Colateral (LSD):</label>
+        <input type="text" id="collateralToken" placeholder="Ex: stETH, aETH, etc.">
       </div>
 
       <div>
-        <label class="block">Valor Investido (€):</label>
-        <input type="number" id="invested" class="w-full p-2 rounded" step="0.01">
+        <label class="block mb-1">Valor Investido (€):</label>
+        <input type="number" id="invested" step="0.01">
       </div>
 
       <div>
-        <label class="block">% de Ganho:</label>
-        <input type="number" id="percentGain" class="w-full p-2 rounded" step="0.01" placeholder="Ex: 5.5">
+        <label class="block mb-1">% de Ganho:</label>
+        <input type="number" id="percentGain" step="0.01" placeholder="Ex: 5.5">
       </div>
 
       <div>
-        <label class="block">Tipo:</label>
-        <select id="type" class="w-full p-2 rounded">
+        <label class="block mb-1">Tipo:</label>
+        <select id="type">
           <option value="APR">APR</option>
           <option value="APY">APY</option>
         </select>
       </div>
 
       <div>
-        <label class="block">Tempo de Bloqueio:</label>
-        <input type="text" id="lockTime" class="w-full p-2 rounded" placeholder="Ex: 30 dias, 1 ano...">
+        <label class="block mb-1">Data de Início:</label>
+        <input type="date" id="startDate">
       </div>
 
       <div>
-        <label class="block">Carteira Utilizada:</label>
-        <select id="wallet" class="w-full p-2 rounded">
+        <label class="block mb-1">Tempo Mínimo de Bloqueio (dias):</label>
+        <input type="number" id="minLockDays" placeholder="Ex: 30">
+      </div>
+
+      <div>
+        <label class="block mb-1">Tempo Total até Desbloqueio (dias):</label>
+        <input type="number" id="unlockDays" placeholder="Ex: 90">
+      </div>
+
+      <div>
+        <label class="block mb-1">Carteira Utilizada:</label>
+        <select id="wallet">
           <option>Metamask</option>
           <option>Trust Wallet</option>
           <option>SafePal</option>
           <option>Phantom</option>
+          <option>Binance Wallet</option>
           <option>Outra</option>
         </select>
       </div>
@@ -74,29 +97,32 @@
     </form>
   </div>
 
-  <div class="mt-10 w-full max-w-4xl">
+  <div class="mt-10 w-full max-w-5xl">
     <h2 class="text-2xl font-semibold mb-4 text-cyan-300">📊 Meus Stakes</h2>
-    <table class="w-full text-left border-collapse">
+    <table>
       <thead>
         <tr class="bg-slate-700">
-          <th class="p-2">Plataforma</th>
-          <th class="p-2">Token</th>
-          <th class="p-2">Colateral</th>
-          <th class="p-2">Investido (€)</th>
-          <th class="p-2">% Ganho</th>
-          <th class="p-2">Tipo</th>
-          <th class="p-2">Bloqueio</th>
-          <th class="p-2">Carteira</th>
-          <th class="p-2">Retorno (€)</th>
+          <th>Plataforma</th>
+          <th>Token</th>
+          <th>Colateral</th>
+          <th>Investido (€)</th>
+          <th>%</th>
+          <th>Tipo</th>
+          <th>Data Início</th>
+          <th>Min Bloq.</th>
+          <th>Desbloq.</th>
+          <th>Falta</th>
+          <th>Carteira</th>
+          <th>Retorno (€)</th>
         </tr>
       </thead>
       <tbody id="stakeTable"></tbody>
-      <tfoot class="bg-slate-700">
+      <tfoot class="bg-slate-700 font-bold">
         <tr>
-          <td colspan="3" class="p-2 font-bold">Total Investido:</td>
-          <td id="totalInvested" class="p-2">0</td>
-          <td colspan="4" class="p-2 font-bold">Total Estimado (€):</td>
-          <td id="totalReturn" class="p-2">0</td>
+          <td colspan="3" class="p-2">Total Investido:</td>
+          <td id="totalInvested" class="p-2">€0</td>
+          <td colspan="6" class="p-2">Total Estimado (€):</td>
+          <td id="totalReturn" class="p-2">€0</td>
         </tr>
       </tfoot>
     </table>
@@ -119,21 +145,36 @@
       const invested = parseFloat(form.invested.value);
       const percentGain = parseFloat(form.percentGain.value);
       const type = form.type.value;
-      const lockTime = form.lockTime.value;
+      const startDate = form.startDate.value;
+      const minLockDays = parseInt(form.minLockDays.value);
+      const unlockDays = parseInt(form.unlockDays.value);
       const wallet = form.wallet.value;
-      const estimatedReturn = (invested * percentGain / 100) + invested;
+
+      const estimatedReturn = invested + (invested * percentGain / 100);
+
+      // Cálculo do tempo restante
+      const start = new Date(startDate);
+      const unlockDate = new Date(start);
+      unlockDate.setDate(start.getDate() + unlockDays);
+
+      const today = new Date();
+      const diffTime = unlockDate - today;
+      const remainingDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td class="p-2">${platform}</td>
-        <td class="p-2">${stakedToken}</td>
-        <td class="p-2">${collateralToken}</td>
-        <td class="p-2">€${invested.toFixed(2)}</td>
-        <td class="p-2">${percentGain}%</td>
-        <td class="p-2">${type}</td>
-        <td class="p-2">${lockTime}</td>
-        <td class="p-2">${wallet}</td>
-        <td class="p-2">€${estimatedReturn.toFixed(2)}</td>
+        <td>${platform}</td>
+        <td>${stakedToken}</td>
+        <td>${collateralToken}</td>
+        <td>€${invested.toFixed(2)}</td>
+        <td>${percentGain}%</td>
+        <td>${type}</td>
+        <td>${startDate}</td>
+        <td>${minLockDays}d</td>
+        <td>${unlockDays}d</td>
+        <td>${remainingDays}d</td>
+        <td>${wallet}</td>
+        <td>€${estimatedReturn.toFixed(2)}</td>
       `;
       tableBody.appendChild(row);
 
