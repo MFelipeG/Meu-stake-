@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Portfólio de Stake</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: white;
+    }
+    input, select {
+      color: black;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-6">
+
+  <h1 class="text-3xl font-bold mb-6 text-cyan-400">💰 Rastreador de Staking</h1>
+
+  <div class="bg-slate-800 p-6 rounded-2xl shadow-lg w-full max-w-lg">
+    <form id="stakeForm" class="space-y-4">
+      <div>
+        <label class="block">Plataforma:</label>
+        <input type="text" id="platform" class="w-full p-2 rounded" placeholder="Ex: Lido, Aave, Uniswap">
+      </div>
+
+      <div>
+        <label class="block">Token em Stake:</label>
+        <input type="text" id="stakedToken" class="w-full p-2 rounded" placeholder="Ex: ETH, USDT, MATIC">
+      </div>
+
+      <div>
+        <label class="block">Token Colateral (LSD):</label>
+        <input type="text" id="collateralToken" class="w-full p-2 rounded" placeholder="Ex: stETH, aETH, etc.">
+      </div>
+
+      <div>
+        <label class="block">Valor Investido (€):</label>
+        <input type="number" id="invested" class="w-full p-2 rounded" step="0.01">
+      </div>
+
+      <div>
+        <label class="block">% de Ganho:</label>
+        <input type="number" id="percentGain" class="w-full p-2 rounded" step="0.01" placeholder="Ex: 5.5">
+      </div>
+
+      <div>
+        <label class="block">Tipo:</label>
+        <select id="type" class="w-full p-2 rounded">
+          <option value="APR">APR</option>
+          <option value="APY">APY</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block">Tempo de Bloqueio:</label>
+        <input type="text" id="lockTime" class="w-full p-2 rounded" placeholder="Ex: 30 dias, 1 ano...">
+      </div>
+
+      <div>
+        <label class="block">Carteira Utilizada:</label>
+        <select id="wallet" class="w-full p-2 rounded">
+          <option>Metamask</option>
+          <option>Trust Wallet</option>
+          <option>SafePal</option>
+          <option>Phantom</option>
+          <option>Outra</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full bg-cyan-500 text-black font-bold p-3 rounded hover:bg-cyan-400 transition">Adicionar Stake</button>
+    </form>
+  </div>
+
+  <div class="mt-10 w-full max-w-4xl">
+    <h2 class="text-2xl font-semibold mb-4 text-cyan-300">📊 Meus Stakes</h2>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-700">
+          <th class="p-2">Plataforma</th>
+          <th class="p-2">Token</th>
+          <th class="p-2">Colateral</th>
+          <th class="p-2">Investido (€)</th>
+          <th class="p-2">% Ganho</th>
+          <th class="p-2">Tipo</th>
+          <th class="p-2">Bloqueio</th>
+          <th class="p-2">Carteira</th>
+          <th class="p-2">Retorno (€)</th>
+        </tr>
+      </thead>
+      <tbody id="stakeTable"></tbody>
+      <tfoot class="bg-slate-700">
+        <tr>
+          <td colspan="3" class="p-2 font-bold">Total Investido:</td>
+          <td id="totalInvested" class="p-2">0</td>
+          <td colspan="4" class="p-2 font-bold">Total Estimado (€):</td>
+          <td id="totalReturn" class="p-2">0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('stakeForm');
+    const tableBody = document.getElementById('stakeTable');
+    const totalInvestedEl = document.getElementById('totalInvested');
+    const totalReturnEl = document.getElementById('totalReturn');
+    let totalInvested = 0;
+    let totalReturn = 0;
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const platform = form.platform.value;
+      const stakedToken = form.stakedToken.value;
+      const collateralToken = form.collateralToken.value;
+      const invested = parseFloat(form.invested.value);
+      const percentGain = parseFloat(form.percentGain.value);
+      const type = form.type.value;
+      const lockTime = form.lockTime.value;
+      const wallet = form.wallet.value;
+      const estimatedReturn = (invested * percentGain / 100) + invested;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="p-2">${platform}</td>
+        <td class="p-2">${stakedToken}</td>
+        <td class="p-2">${collateralToken}</td>
+        <td class="p-2">€${invested.toFixed(2)}</td>
+        <td class="p-2">${percentGain}%</td>
+        <td class="p-2">${type}</td>
+        <td class="p-2">${lockTime}</td>
+        <td class="p-2">${wallet}</td>
+        <td class="p-2">€${estimatedReturn.toFixed(2)}</td>
+      `;
+      tableBody.appendChild(row);
+
+      totalInvested += invested;
+      totalReturn += estimatedReturn;
+      totalInvestedEl.textContent = "€" + totalInvested.toFixed(2);
+      totalReturnEl.textContent = "€" + totalReturn.toFixed(2);
+
+      form.reset();
+    });
+  </script>
+
+</body>
+</html>
