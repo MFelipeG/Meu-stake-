@@ -1,191 +1,538 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu Portfólio de Stake</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stake Portfolio PRO</title>
+
+  <!-- Tailwind (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    body { background-color: #0f172a; color: white; }
-    input, select {
-      background-color: #1e293b;
-      color: white;
-      border: 1px solid #334155;
-      border-radius: 0.5rem;
-      padding: 0.5rem;
-      width: 100%;
+    body { background:#0b1220; color:#e6eef8; min-height:100vh; }
+    .card { background: #0f1724; border: 1px solid #1f2a37; border-radius: 12px; padding: 16px; }
+    input, select, textarea {
+      background: #0f1724; color: #e6eef8; border: 1px solid #233040; padding: 8px 10px; border-radius: 8px;
     }
-    input::placeholder { color: #94a3b8; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { padding: 8px; }
-    th { background-color: #1e293b; }
+    ::placeholder { color:#7f8fa6; }
+    .small { font-size: 0.85rem; color: #9fb0c9; }
+    .muted { color:#89a0bd; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:8px 6px; border-bottom: 1px solid #17202a; text-align:left; }
+    th { color:#cfe8ff; }
+    .chip { background:#112131; padding:6px 8px; border-radius:999px; font-size:0.85rem; color:#9fd6ff; }
+    .btn { background:#06b6d4; color:#072a2e; font-weight:700; padding:10px 12px; border-radius:10px; }
+    .btn-ghost { background:transparent; border:1px solid #233040; color:#9fb0c9; padding:8px 10px; border-radius:8px; }
+    .small-muted { font-size:0.85rem; color:#7d98b7; }
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-6">
+<body class="p-6">
 
-  <h1 class="text-3xl font-bold mb-6 text-cyan-400">💰 Rastreador de Staking</h1>
-
-  <div class="bg-slate-800 p-6 rounded-2xl shadow-lg w-full max-w-lg">
-    <form id="stakeForm" class="space-y-4">
+  <div class="max-w-[1100px] mx-auto space-y-6">
+    <header class="flex items-center justify-between">
       <div>
-        <label class="block mb-1">Plataforma:</label>
-        <select id="platform">
-          <option>Lido</option>
-          <option>Aave</option>
-          <option>Uniswap</option>
-          <option>Binance</option>
-          <option>Outra</option>
-        </select>
+        <h1 class="text-2xl font-extrabold text-cyan-300">🚀 Stake Portfolio PRO</h1>
+        <div class="small-muted">Rastreamento automático com CoinGecko + gráficos | Salve snapshots para histórico</div>
+      </div>
+      <div class="text-right small-muted">
+        <div id="version">Versão: PRO · offline friendly</div>
+      </div>
+    </header>
+
+    <!-- Form -->
+    <section class="card">
+      <form id="stakeForm" class="grid grid-cols-3 gap-4 grid-rows-auto items-end">
+        <div>
+          <label class="small">Plataforma</label>
+          <select id="platform">
+            <option>Lido</option><option>Aave</option><option>Uniswap</option><option>Binance</option><option>Outra</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="small">Token (símbolo)</label>
+          <input id="symbol" placeholder="Ex: ETH, BTC, BNB" />
+          <div class="small-muted">Digite o símbolo; o site resolve o ID no CoinGecko automaticamente.</div>
+        </div>
+
+        <div>
+          <label class="small">Quantidade (crypto)</label>
+          <input id="amountCrypto" type="number" step="any" placeholder="Ex: 0.002" />
+        </div>
+
+        <div>
+          <label class="small">Valor investido em € (opcional)</label>
+          <input id="amountEuroManual" type="number" step="any" placeholder="Se deixar vazio, será calculado via preço atual" />
+          <div class="small-muted">Se preencher, usaremos esse valor em euros. Se deixar vazio, buscamos o preço atual.</div>
+        </div>
+
+        <div>
+          <label class="small">Token Colateral (LSD) — símbolo</label>
+          <input id="lsdSymbol" placeholder="Ex: steth, aest (pode deixar vazio)" />
+        </div>
+
+        <div>
+          <label class="small">Quantidade Colateral (opcional)</label>
+          <input id="lsdAmount" type="number" step="any" placeholder="Ex: 0.002 (se estiver colateralizando)" />
+        </div>
+
+        <div>
+          <label class="small">% de Ganho (estimado)</label>
+          <input id="percentGain" type="number" step="any" placeholder="Ex: 5.5" />
+        </div>
+
+        <div>
+          <label class="small">Tipo</label>
+          <select id="type">
+            <option value="normal">Normal</option>
+            <option value="reinvest">Reinvestido (LSD)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="small">Carteira</label>
+          <select id="wallet">
+            <option>MetaMask</option><option>Trust Wallet</option><option>SafePal</option><option>Phantom</option><option>Binance Wallet</option><option>Outra</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="small">Data de Início</label>
+          <input id="startDate" type="date" />
+        </div>
+
+        <div>
+          <label class="small">Tempo mínimo bloqueio (dias)</label>
+          <input id="minLockDays" type="number" placeholder="Ex: 30" />
+        </div>
+
+        <div>
+          <label class="small">Tempo até desbloqueio (dias)</label>
+          <input id="unlockDays" type="number" placeholder="Ex: 90" />
+        </div>
+
+        <div class="col-span-3 flex gap-2 mt-2">
+          <button id="fetchAndAdd" type="button" class="btn">🔁 Buscar preço & Adicionar</button>
+          <button id="addManual" type="button" class="btn-ghost">➕ Adicionar manual (sem API)</button>
+          <button id="saveSnapshot" type="button" class="btn-ghost">📸 Salvar snapshot</button>
+          <div class="ml-auto small-muted self-center">Preços por CoinGecko</div>
+        </div>
+
+        <div class="col-span-3 mt-1 small-muted">Se você quer preço de uma data específica, deixe o campo Data de Início e depois pressione <strong>Buscar preço & Adicionar</strong> (o sistema tentará usar preço histórico se a data for diferente de hoje).</div>
+      </form>
+    </section>
+
+    <!-- Top summary -->
+    <section class="card flex gap-4 flex-col md:flex-row items-stretch">
+      <div class="flex-1">
+        <div class="muted small">Total Investido (EUR)</div>
+        <div class="text-2xl font-bold" id="totalInvested">€0.00</div>
+      </div>
+      <div class="flex-1">
+        <div class="muted small">Total em Crypto (soma convertida p/€)</div>
+        <div class="text-2xl font-bold" id="totalCryptoEuro">€0.00</div>
+      </div>
+      <div class="flex-1">
+        <div class="muted small">Ganho Estimado</div>
+        <div class="text-2xl font-bold text-emerald-300" id="totalGain">€0.00</div>
+      </div>
+    </section>
+
+    <!-- Table + Charts -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="card overflow-auto">
+        <h3 class="font-semibold text-cyan-200 mb-2">Minhas Posições</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Plataforma</th><th>Token</th><th>Qt</th><th>€ atual</th><th>LSD</th><th>Bloq.</th><th>Faltam</th><th>Carteira</th><th>Ganho €</th>
+            </tr>
+          </thead>
+          <tbody id="positionsTable"></tbody>
+        </table>
+
+        <div class="mt-3 flex gap-2">
+          <button id="clearAll" class="btn-ghost">Limpar tudo</button>
+          <button id="exportCSV" class="btn-ghost">Exportar CSV</button>
+        </div>
       </div>
 
-      <div>
-        <label class="block mb-1">Token em Stake:</label>
-        <input type="text" id="stakedToken" placeholder="Ex: ETH, USDT, MATIC">
-      </div>
+      <div class="space-y-4">
+        <div class="card">
+          <h3 class="font-semibold text-cyan-200">Distribuição por Plataforma</h3>
+          <canvas id="pieChart" style="max-height:300px"></canvas>
+        </div>
 
-      <div>
-        <label class="block mb-1">Token Colateral (LSD):</label>
-        <input type="text" id="collateralToken" placeholder="Ex: stETH, aETH, etc.">
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-cyan-200">Histórico (snapshots)</h3>
+            <div class="small-muted">Salvar manualmente para criar histórico</div>
+          </div>
+          <canvas id="lineChart" style="max-height:220px"></canvas>
+        </div>
       </div>
+    </section>
 
-      <div>
-        <label class="block mb-1">Valor Investido (€):</label>
-        <input type="number" id="invested" step="0.01">
-      </div>
-
-      <div>
-        <label class="block mb-1">% de Ganho:</label>
-        <input type="number" id="percentGain" step="0.01" placeholder="Ex: 5.5">
-      </div>
-
-      <div>
-        <label class="block mb-1">Tipo:</label>
-        <select id="type">
-          <option value="APR">APR</option>
-          <option value="APY">APY</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="block mb-1">Data de Início:</label>
-        <input type="date" id="startDate">
-      </div>
-
-      <div>
-        <label class="block mb-1">Tempo Mínimo de Bloqueio (dias):</label>
-        <input type="number" id="minLockDays" placeholder="Ex: 30">
-      </div>
-
-      <div>
-        <label class="block mb-1">Tempo Total até Desbloqueio (dias):</label>
-        <input type="number" id="unlockDays" placeholder="Ex: 90">
-      </div>
-
-      <div>
-        <label class="block mb-1">Carteira Utilizada:</label>
-        <select id="wallet">
-          <option>Metamask</option>
-          <option>Trust Wallet</option>
-          <option>SafePal</option>
-          <option>Phantom</option>
-          <option>Binance Wallet</option>
-          <option>Outra</option>
-        </select>
-      </div>
-
-      <button type="submit" class="w-full bg-cyan-500 text-black font-bold p-3 rounded hover:bg-cyan-400 transition">Adicionar Stake</button>
-    </form>
+    <footer class="text-center small-muted">Feito para você — atualize, melhore e me peça novas funções (auto-sincronizar, alerts, etc.)</footer>
   </div>
 
-  <div class="mt-10 w-full max-w-5xl">
-    <h2 class="text-2xl font-semibold mb-4 text-cyan-300">📊 Meus Stakes</h2>
-    <table>
-      <thead>
-        <tr class="bg-slate-700">
-          <th>Plataforma</th>
-          <th>Token</th>
-          <th>Colateral</th>
-          <th>Investido (€)</th>
-          <th>%</th>
-          <th>Tipo</th>
-          <th>Data Início</th>
-          <th>Min Bloq.</th>
-          <th>Desbloq.</th>
-          <th>Falta</th>
-          <th>Carteira</th>
-          <th>Retorno (€)</th>
-        </tr>
-      </thead>
-      <tbody id="stakeTable"></tbody>
-      <tfoot class="bg-slate-700 font-bold">
-        <tr>
-          <td colspan="3" class="p-2">Total Investido:</td>
-          <td id="totalInvested" class="p-2">€0</td>
-          <td colspan="6" class="p-2">Total Estimado (€):</td>
-          <td id="totalReturn" class="p-2">€0</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+<script>
+/*
+  Funcionalidades principais implementadas:
+  - Buscar ID por símbolo no CoinGecko (cache local)
+  - Buscar preço atual (ou histórico se data de início fornecida)
+  - Adicionar posição com valores em crypto + EUR
+  - Suportar LSD colateral e tipo reinvestido
+  - Calcular dias restantes até desbloqueio
+  - Salvar posições no localStorage
+  - Salvar snapshots (timestamp e total EUR) para gráfico histórico
+  - Mostrar pie chart (distribuição por plataforma) e line chart (histórico)
+*/
 
-  <script>
-    const form = document.getElementById('stakeForm');
-    const tableBody = document.getElementById('stakeTable');
-    const totalInvestedEl = document.getElementById('totalInvested');
-    const totalReturnEl = document.getElementById('totalReturn');
-    let totalInvested = 0;
-    let totalReturn = 0;
+// ---------- Utilitários ----------
+const API_BASE = 'https://api.coingecko.com/api/v3';
+const cache = {
+  coinList: null, // [{id,symbol,name},...]
+  idMap: {}       // symbol -> id
+};
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
+function fmtMoney(n){
+  return '€' + Number(n||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+}
 
-      const platform = form.platform.value;
-      const stakedToken = form.stakedToken.value;
-      const collateralToken = form.collateralToken.value;
-      const invested = parseFloat(form.invested.value);
-      const percentGain = parseFloat(form.percentGain.value);
-      const type = form.type.value;
-      const startDate = form.startDate.value;
-      const minLockDays = parseInt(form.minLockDays.value);
-      const unlockDays = parseInt(form.unlockDays.value);
-      const wallet = form.wallet.value;
+function daysBetween(dateA, dateB = new Date()){
+  const diff = new Date(dateA) - new Date(dateB);
+  return Math.max(0, Math.ceil(diff / (1000*60*60*24)));
+}
 
-      const estimatedReturn = invested + (invested * percentGain / 100);
+function savePositions(positions){
+  localStorage.setItem('positions_v1', JSON.stringify(positions));
+}
+function loadPositions(){
+  try {
+    return JSON.parse(localStorage.getItem('positions_v1') || '[]');
+  } catch(e){ return []; }
+}
+function saveSnapshots(snaps){
+  localStorage.setItem('snapshots_v1', JSON.stringify(snaps));
+}
+function loadSnapshots(){
+  try {
+    return JSON.parse(localStorage.getItem('snapshots_v1') || '[]');
+  } catch(e){ return []; }
+}
 
-      // Cálculo do tempo restante
-      const start = new Date(startDate);
-      const unlockDate = new Date(start);
-      unlockDate.setDate(start.getDate() + unlockDays);
+// ---------- CoinGecko helpers ----------
+async function loadCoinListIfNeeded(){
+  if (cache.coinList) return cache.coinList;
+  const raw = localStorage.getItem('cg_coinlist_v1');
+  if (raw){
+    try {
+      cache.coinList = JSON.parse(raw);
+      return cache.coinList;
+    } catch(e){}
+  }
+  // fetch remote (may be heavy, but we cache)
+  const res = await fetch(API_BASE + '/coins/list');
+  const data = await res.json();
+  cache.coinList = data; // array with {id,symbol,name}
+  // cache to localStorage (small size but might be large; still ok)
+  try { localStorage.setItem('cg_coinlist_v1', JSON.stringify(data)); } catch(e){}
+  return data;
+}
 
-      const today = new Date();
-      const diffTime = unlockDate - today;
-      const remainingDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+async function resolveSymbolToId(symbol){
+  if (!symbol) return null;
+  const s = String(symbol).trim().toLowerCase();
+  if (cache.idMap[s]) return cache.idMap[s];
+  // try direct common cases
+  await loadCoinListIfNeeded();
+  const match = cache.coinList.find(c => c.symbol.toLowerCase() === s) || cache.coinList.find(c => c.id.toLowerCase() === s);
+  const id = match ? match.id : null;
+  cache.idMap[s] = id;
+  return id;
+}
 
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${platform}</td>
-        <td>${stakedToken}</td>
-        <td>${collateralToken}</td>
-        <td>€${invested.toFixed(2)}</td>
-        <td>${percentGain}%</td>
-        <td>${type}</td>
-        <td>${startDate}</td>
-        <td>${minLockDays}d</td>
-        <td>${unlockDays}d</td>
-        <td>${remainingDays}d</td>
-        <td>${wallet}</td>
-        <td>€${estimatedReturn.toFixed(2)}</td>
-      `;
-      tableBody.appendChild(row);
+async function fetchCurrentPriceEUR(id){
+  if (!id) return null;
+  const url = API_BASE + '/simple/price?ids=' + encodeURIComponent(id) + '&vs_currencies=eur';
+  const r = await fetch(url);
+  const j = await r.json();
+  return j[id]?.eur ?? null;
+}
 
-      totalInvested += invested;
-      totalReturn += estimatedReturn;
-      totalInvestedEl.textContent = "€" + totalInvested.toFixed(2);
-      totalReturnEl.textContent = "€" + totalReturn.toFixed(2);
+async function fetchHistoricalPriceEUR(id, dateISO){
+  // dateISO: yyyy-mm-dd -> CoinGecko wants dd-mm-yyyy
+  if (!id || !dateISO) return null;
+  const d = new Date(dateISO);
+  if (isNaN(d)) return null;
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  const dateParam = dd + '-' + mm + '-' + yyyy;
+  const url = API_BASE + '/coins/' + encodeURIComponent(id) + '/history?date=' + dateParam;
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  const j = await r.json();
+  return j.market_data?.current_price?.eur ?? null;
+}
 
-      form.reset();
-    });
-  </script>
+// ---------- App state and DOM ----------
+let positions = loadPositions(); // array of position objects
+let snapshots = loadSnapshots(); // {ts, totalEuro}
 
+const el = {
+  form: document.getElementById('stakeForm'),
+  platform: document.getElementById('platform'),
+  symbol: document.getElementById('symbol'),
+  amountCrypto: document.getElementById('amountCrypto'),
+  amountEuroManual: document.getElementById('amountEuroManual'),
+  lsdSymbol: document.getElementById('lsdSymbol'),
+  lsdAmount: document.getElementById('lsdAmount'),
+  percentGain: document.getElementById('percentGain'),
+  type: document.getElementById('type'),
+  wallet: document.getElementById('wallet'),
+  startDate: document.getElementById('startDate'),
+  minLockDays: document.getElementById('minLockDays'),
+  unlockDays: document.getElementById('unlockDays'),
+
+  btnFetchAdd: document.getElementById('fetchAndAdd'),
+  btnAddManual: document.getElementById('addManual'),
+  btnSaveSnapshot: document.getElementById('saveSnapshot'),
+  btnClearAll: document.getElementById('clearAll'),
+  btnExportCSV: document.getElementById('exportCSV'),
+
+  table: document.getElementById('positionsTable'),
+  totalInvested: document.getElementById('totalInvested'),
+  totalCryptoEuro: document.getElementById('totalCryptoEuro'),
+  totalGain: document.getElementById('totalGain'),
+  pieCanvas: document.getElementById('pieChart'),
+  lineCanvas: document.getElementById('lineChart')
+};
+
+// Charts
+let pieChart = null;
+let lineChart = null;
+
+function initCharts(){
+  const pieCtx = el.pieCanvas.getContext('2d');
+  pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: { labels: [], datasets:[{ data: [], backgroundColor: [] }] },
+    options: { plugins:{legend:{position:'bottom'}}, maintainAspectRatio:false }
+  });
+
+  const lineCtx = el.lineCanvas.getContext('2d');
+  lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: { labels: [], datasets:[
+      { label:'Total (€)', data:[], borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.08)', tension:0.2, fill:true }
+    ]},
+    options:{scales:{x:{display:true}, y:{display:true}}, plugins:{legend:{display:false}}, maintainAspectRatio:false}
+  });
+}
+
+function randomColor(i){
+  const palette = ['#06b6d4','#10b981','#f59e0b','#ef4444','#7c3aed','#3b82f6','#f97316','#14b8a6'];
+  return palette[i % palette.length];
+}
+
+// ---------- Render ----------
+function renderPositions(){
+  el.table.innerHTML = '';
+  let totalInvested = 0;
+  let totalCryptoEuro = 0;
+  let totalGain = 0;
+  const byPlatform = {};
+
+  positions.forEach((p, idx) => {
+    const tr = document.createElement('tr');
+
+    // calculate remaining days
+    const start = p.startDate ? new Date(p.startDate) : null;
+    const unlockDate = start ? new Date(start) : null;
+    if (unlockDate && p.unlockDays) unlockDate.setDate(unlockDate.getDate() + Number(p.unlockDays || 0));
+    const remaining = unlockDate ? daysBetween(unlockDate) : '-';
+
+    const currentEuro = Number(p.euroValue || 0);
+    const gain = Number(p.estimatedReturn || 0) - (Number(p.manualEuro) || Number(p.euroValue || 0));
+    // row cells
+    tr.innerHTML = `
+      <td>${p.platform}</td>
+      <td>${p.symbol.toUpperCase()}</td>
+      <td>${p.amountCrypto || 0}</td>
+      <td>${fmtMoney(currentEuro)}</td>
+      <td>${p.lsdSymbol ? (p.lsdSymbol.toUpperCase()+' '+(p.lsdAmount||'')) : '-'}</td>
+      <td>${p.minLockDays? p.minLockDays+'d':'-'}</td>
+      <td>${remaining}</td>
+      <td>${p.wallet}</td>
+      <td class="text-emerald-300">${fmtMoney(gain)}</td>
+    `;
+    // remove button on click
+    const rem = document.createElement('td');
+    rem.innerHTML = `<button class="btn-ghost">Remover</button>`;
+    rem.addEventListener('click', ()=> { positions.splice(idx,1); savePositions(positions); updateAll(); });
+    tr.appendChild(rem);
+
+    el.table.appendChild(tr);
+
+    totalInvested += Number(p.manualEuro || 0); // money out of pocket if provided manually, else 0
+    totalCryptoEuro += currentEuro;
+    totalGain += gain;
+
+    byPlatform[p.platform] = (byPlatform[p.platform] || 0) + currentEuro;
+  });
+
+  el.totalInvested.textContent = fmtMoney(totalInvested);
+  el.totalCryptoEuro.textContent = fmtMoney(totalCryptoEuro);
+  el.totalGain.textContent = fmtMoney(totalGain);
+
+  // update pie chart
+  const labels = Object.keys(byPlatform);
+  const data = labels.map(l => Math.round(byPlatform[l]*100)/100);
+  const colors = labels.map((_,i)=>randomColor(i));
+  pieChart.data.labels = labels;
+  pieChart.data.datasets[0].data = data;
+  pieChart.data.datasets[0].backgroundColor = colors;
+  pieChart.update();
+}
+
+// ---------- Snapshots (history) ----------
+function updateLineChart(){
+  const snaps = loadSnapshots();
+  lineChart.data.labels = snaps.map(s => (new Date(s.ts)).toLocaleString());
+  lineChart.data.datasets[0].data = snaps.map(s => s.total);
+  lineChart.update();
+}
+
+// ---------- Add position (main flow) ----------
+async function addPositionFromForm(useAPI=true){
+  const platform = el.platform.value;
+  const symbol = String(el.symbol.value||'').trim();
+  const amountCrypto = Number(el.amountCrypto.value || 0);
+  const manualEuro = el.amountEuroManual.value ? Number(el.amountEuroManual.value) : null;
+  const lsdSymbol = String(el.lsdSymbol.value||'').trim();
+  const lsdAmount = el.lsdAmount.value ? Number(el.lsdAmount.value) : null;
+  const percentGain = el.percentGain.value ? Number(el.percentGain.value) : 0;
+  const type = el.type.value;
+  const wallet = el.wallet.value;
+  const startDate = el.startDate.value || null;
+  const minLockDays = el.minLockDays.value ? Number(el.minLockDays.value) : null;
+  const unlockDays = el.unlockDays.value ? Number(el.unlockDays.value) : null;
+
+  if (!symbol || !amountCrypto){
+    alert('Preencha ao menos o símbolo do token e a quantidade em crypto.');
+    return;
+  }
+
+  // Determine euro value
+  let euroValue = 0;
+  let estimatedReturn = 0;
+
+  if (manualEuro !== null && !isNaN(manualEuro)){
+    euroValue = manualEuro;
+  } else if (useAPI){
+    // resolve id
+    const id = await resolveSymbolToId(symbol);
+    if (!id){
+      if (!confirm('Não encontrei o ID da moeda no CoinGecko para o símbolo "'+symbol+'". Deseja adicionar a posição sem preço (manual)?')) return;
+    } else {
+      // if startDate is provided and not today, try historical
+      let priceEUR = null;
+      if (startDate){
+        priceEUR = await fetchHistoricalPriceEUR(id, startDate).catch(()=>null);
+      }
+      if (priceEUR === null){
+        priceEUR = await fetchCurrentPriceEUR(id).catch(()=>null);
+      }
+      euroValue = (priceEUR !== null) ? (priceEUR * amountCrypto) : 0;
+    }
+  }
+
+  // If we have LSD amount and symbol and user didn't provide manual euro for it, try fetch LSD price (non-blocking)
+  let lsdEuroValue = 0;
+  if (lsdSymbol && lsdAmount){
+    const lsdId = await resolveSymbolToId(lsdSymbol);
+    if (lsdId){
+      const lsdPrice = await fetchCurrentPriceEUR(lsdId).catch(()=>null);
+      if (lsdPrice) lsdEuroValue = lsdPrice * lsdAmount;
+    }
+  }
+
+  // estimatedReturn: simple model = invested + invested * percentGain/100
+  estimatedReturn = euroValue + (euroValue * (percentGain/100 || 0));
+
+  // store position
+  const pos = {
+    id: Date.now().toString(36),
+    platform, symbol: symbol.toLowerCase(), amountCrypto, euroValue: Number(euroValue), manualEuro: manualEuro || null,
+    lsdSymbol: lsdSymbol ? lsdSymbol.toLowerCase() : null, lsdAmount: lsdAmount || null, lsdEuroValue: lsdEuroValue,
+    percentGain, type, wallet, startDate, minLockDays, unlockDays, estimatedReturn: Number(estimatedReturn)
+  };
+
+  positions.unshift(pos);
+  savePositions(positions);
+  updateAll();
+  el.form.reset();
+}
+
+// ---------- CSV export ----------
+function exportCSV(){
+  const rows = [['id','platform','symbol','amountCrypto','euroValue','manualEuro','lsdSymbol','lsdAmount','percentGain','type','wallet','startDate','minLockDays','unlockDays','estimatedReturn']];
+  positions.forEach(p => {
+    rows.push([p.id,p.platform,p.symbol,p.amountCrypto,p.euroValue,p.manualEuro,p.lsdSymbol,p.lsdAmount,p.percentGain,p.type,p.wallet,p.startDate,p.minLockDays,p.unlockDays,p.estimatedReturn]);
+  });
+  const csv = rows.map(r => r.map(c => '"' + String(c||'').replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'positions.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Clear all ----------
+function clearAllPositions(){
+  if (!confirm('Limpar todas as posições?')) return;
+  positions = [];
+  savePositions(positions);
+  updateAll();
+}
+
+// ---------- Snapshots ----------
+function saveSnapshot(){
+  const total = positions.reduce((s,p)=> s + Number(p.euroValue || 0), 0);
+  const snaps = loadSnapshots();
+  snaps.push({ ts: Date.now(), total: Math.round(total*100)/100 });
+  saveSnapshots(snaps);
+  updateLineChart();
+  alert('Snapshot salvo.');
+}
+
+// ---------- Update everything ----------
+function updateAll(){
+  renderPositions();
+  updateLineChart();
+  // persist
+  savePositions(positions);
+}
+
+// ---------- Events ----------
+el.btnFetchAdd.addEventListener('click', ()=> addPositionFromForm(true));
+el.btnAddManual.addEventListener('click', ()=> addPositionFromForm(false));
+el.btnSaveSnapshot.addEventListener('click', saveSnapshot);
+el.btnClearAll.addEventListener('click', clearAllPositions);
+el.btnExportCSV.addEventListener('click', exportCSV);
+
+// init
+initCharts();
+updateAll();
+updateLineChart();
+
+</script>
 </body>
 </html>
